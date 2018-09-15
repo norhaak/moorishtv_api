@@ -6,25 +6,12 @@ from utils import getTVPrograms, getCurrentDate
 app = Flask(__name__)
 api = Api(app)
 
-"""
-TV_PROGRAMS = {
-    '1': {'title': '', 'time': ''},
-    '2': {'title': '', 'time': ''},
-    '3': {'title': '', 'time': ''},
-    '4': {'title': '', 'time': ''},
-    '5': {'title': '', 'time': ''},
-    '6': {'title': '', 'time': ''},
-    '7': {'title': '', 'time': ''},
-    '8': {'title': '', 'time': ''},
-}
-"""
-
 LAST_UPDATE = None
 TV_PROGRAMS = getTVPrograms(LAST_UPDATE)
 LAST_UPDATE = getCurrentDate()
 
 def abort_if_program_doesnt_exist(program_id):
-    if program_id not in TV_PROGRAMS:
+    if int(program_id) > len(TV_PROGRAMS["programs"]):
         abort(404, message="Program {} doesn't exist.".format(program_id))
 
 parser = reqparse.RequestParser()
@@ -36,7 +23,7 @@ parser.add_argument('time')
 class Program(Resource):
     def get(self, program_id):
         abort_if_program_doesnt_exist(program_id)
-        return TV_PROGRAMS[program_id]
+        return TV_PROGRAMS["programs"][int(program_id)]
 
     def delete(self, program_id):
         abort_if_program_doesnt_exist(program_id)
@@ -82,7 +69,7 @@ api.add_resource(HelloWorld, '/')
 """
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
 
 
 

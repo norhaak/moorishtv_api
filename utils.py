@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 
-PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr=16/09/2018&lang=fr'
+PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr=16/09/2018&lang=ar'
 
 
 def getCurrentDate():
@@ -43,16 +43,20 @@ def parseTVPrograms(soup):
             prog_titles[i] = fetchMissingTitle(soup, idx)
             idx += 1
 
-    prog_dict = {}
+    prog_list = []
     for i in range(len(prog_times)):
-        prog_dict[prog_times[i]] = prog_titles[i]
+        program = {
+            'time': prog_times[i],
+            'title': prog_titles[i]
+        }
+        prog_list.append(program)
 
     """
     for prog_time, prog_title in prog_dict.items():
         print("{} {}".format(prog_time, prog_title))
     """
 
-    return prog_dict
+    return prog_list
 
 
 def fetchData(prog_url):
