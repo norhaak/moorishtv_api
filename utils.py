@@ -4,23 +4,25 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 
-
-
-PROG_URL = 'http://www.alaoula.ma/programmes_inst.php'
+PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr=16/09/2018&lang=fr'
 
 
 def getCurrentDate():
     current_date = datetime.now().date()
     return current_date
 
+
 def getCurrentTime():
     time_now = (datetime.now()).strftime('%H:%M')
     return time_now
 
+
+def fetchMissingTitle(soup, idx):
+    title = soup.findAll('div', class_='grille_mid_holder2')[idx].a.text
+    return title
+
+
 def parseTVPrograms(soup):
-    print("Welcome to MoorishTV!\n")
-
-
     prog_time_list = soup.findAll('div', class_='grille_time_off')
     prog_times = []
     for prog_item in prog_time_list:
@@ -35,13 +37,22 @@ def parseTVPrograms(soup):
         prog_title = prog_item.a.text
         prog_titles.append(prog_title)
 
-    print(prog_titles[25])
+    idx = 0
+    for i in range(len(prog_titles)):
+        if prog_titles[i] == '\n\n':
+            prog_titles[i] = fetchMissingTitle(soup, idx)
+            idx += 1
+
     prog_dict = {}
     for i in range(len(prog_times)):
         prog_dict[prog_times[i]] = prog_titles[i]
 
+    """
     for prog_time, prog_title in prog_dict.items():
         print("{} {}".format(prog_time, prog_title))
+    """
+
+    return prog_dict
 
 
 def fetchData(prog_url):
@@ -49,10 +60,11 @@ def fetchData(prog_url):
     try:
         resp = requests.get(prog_url)
         if resp.status_code == 200:
-            content = resp.content 
+            content = resp.content
     except:
         content = open('content.bin', 'rb').read()
     return content
+
 
 def prepareSoup(content):
     soup = None
@@ -60,12 +72,14 @@ def prepareSoup(content):
         soup = BeautifulSoup(content, 'html.parser')
     return soup
 
-if __name__ == '__main__':
+
+def getTVPrograms(last_update):
     soup = None
-    last_update = None
+    programs = dict()
+    message = ""
+    status = 'error'
 
     if last_update != getCurrentDate():
-        last_update = getCurrentDate()
         content = fetchData(PROG_URL)
         open('content.bin', 'wb').write(content)
     else:
@@ -74,6 +88,20 @@ if __name__ == '__main__':
     soup = prepareSoup(content)
     
     if soup:
-        parseTVPrograms(soup)
+        programs = parseTVPrograms(soup)
+        status = "success"
     else:
-        print("Error: Unable to connect to remote server {}".format(PROG_URL))
+        status = "error"
+        message = "Error: Unable to connect to remote server {}".format(PROG_URL)
+        programs = dict()
+
+    return {'status': status,
+            'message': message,
+            'programs': programs}
+        
+
+if __name__ == '__main__':
+    last_update = getCurrentDate()
+    print(getTVPrograms(last_update))
+
+    

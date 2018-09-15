@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_restful import reqparse, abort, Resource, Api
 
+from utils import getTVPrograms, getCurrentDate
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -17,16 +19,9 @@ TV_PROGRAMS = {
 }
 """
 
-def getTVPrograms(qty):
-    programs = {}
-    for i in range(1, qty):
-        title = "title_{}".format(i)
-        time = "time_{}".format(i)
-        program = { title: time }
-        programs[str(i)] = program
-    return programs
-
-TV_PROGRAMS = getTVPrograms(10)
+LAST_UPDATE = None
+TV_PROGRAMS = getTVPrograms(LAST_UPDATE)
+LAST_UPDATE = getCurrentDate()
 
 def abort_if_program_doesnt_exist(program_id):
     if program_id not in TV_PROGRAMS:
