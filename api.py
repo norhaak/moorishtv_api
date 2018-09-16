@@ -62,13 +62,12 @@ class ProgramList(Resource):
 api.add_resource(ProgramList, '/programs')
 api.add_resource(Program, '/programs/<program_id>')
 
-"""
 class HelloWorld(Resource):
     def get(self):
-        return {'hello': 'world'}
+        return "<h1>Welcome to NorHaak Labs</h1>"
 
 api.add_resource(HelloWorld, '/')
-"""
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
