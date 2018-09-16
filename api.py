@@ -3,14 +3,15 @@ import os
 from flask import Flask
 from flask_restful import reqparse, abort, Resource, Api
 
-from utils import getTVPrograms, getCurrentDate
+from utils import getTVPrograms, getCurrentDate, formatDate
+from database import db_session
 
 app = Flask(__name__)
 api = Api(app)
 
-LAST_UPDATE = None
-TV_PROGRAMS = getTVPrograms(LAST_UPDATE)
-LAST_UPDATE = getCurrentDate()
+
+TV_PROGRAMS = {}
+
 
 def abort_if_program_doesnt_exist(program_id):
     if int(program_id) > len(TV_PROGRAMS["programs"]):
@@ -45,6 +46,8 @@ class Program(Resource):
 # shows a list of all programs, and lets you POST to add new programs
 class ProgramList(Resource):
     def get(self):
+        current_date = formatDate(getCurrentDate())
+        TV_PROGRAMS = getTVPrograms(current_date)
         return TV_PROGRAMS
 
     def post(self):
@@ -62,11 +65,14 @@ class ProgramList(Resource):
 api.add_resource(ProgramList, '/programs')
 api.add_resource(Program, '/programs/<program_id>')
 
-class HelloWorld(Resource):
-    def get(self):
-        return "<h1>Welcome to NorHaak Labs</h1>"
+@app.route("/")
+def index():
+    return "<h1>Welcome to NorHaak Labs</h1>"
 
-api.add_resource(HelloWorld, '/')
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
+
 
 
 if __name__ == '__main__':

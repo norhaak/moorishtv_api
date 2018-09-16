@@ -1,11 +1,59 @@
 
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
+from database import db_session
+from models import Program
 
 
-PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr=16/09/2018&lang=ar'
+PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr={}&lang=fr'
 
+
+def insert_program(program):
+    db_session.add(program)
+    db_session.commit()
+
+
+def save_programs(date, programs):
+    for item in programs:
+        program = Program(date, item['time'], item['title'])
+        insert_program(program)
+    db_session.commit()
+
+
+def get_programs_by_date(date):
+    programs = Program.query.filter(Program.date == date).all()
+    return programs
+
+
+def getNext7Dates():
+    currentDate = getCurrentDate()
+    dates = []
+    for i in range(1,8):
+        nextDate = currentDate + timedelta(days=i)
+        dates.append(formatDate(nextDate))
+    return dates
+
+
+def updateDB():
+    dates = getNext7Dates()
+    for date in dates:
+        content = fetchData(PROG_URL.format(date))
+        soup = prepareSoup(content)
+        programs = parseTVPrograms(soup)
+        save_programs(date, programs)
+        
+
+
+def cleanDB(date):
+    programs = get_programs_by_date(date)
+    for program in programs:
+        db_session.delete(program)
+    db_session.commit()
+
+
+def formatDate(_date):
+    return _date.strftime('%d/%m/%Y')
 
 def getCurrentDate():
     current_date = datetime.now().date()
@@ -77,35 +125,23 @@ def prepareSoup(content):
     return soup
 
 
-def getTVPrograms(last_update):
-    soup = None
+def getTVPrograms(date):
     programs = dict()
     message = ""
-    status = 'error'
+    status = 'success'
 
-    if last_update != getCurrentDate():
-        content = fetchData(PROG_URL)
-        open('content.bin', 'wb').write(content)
-    else:
-        content = open('content.bin', 'rb').read()
-
-    soup = prepareSoup(content)
+    programs = get_programs_by_date(date)
+    programsJson = []
+    for program in programs:
+        programsJson.append(program.as_json())
     
-    if soup:
-        programs = parseTVPrograms(soup)
-        status = "success"
-    else:
-        status = "error"
-        message = "Error: Unable to connect to remote server {}".format(PROG_URL)
-        programs = dict()
-
     return {'status': status,
             'message': message,
-            'programs': programs}
+            'programs': programsJson}
         
 
 if __name__ == '__main__':
-    last_update = getCurrentDate()
-    print(getTVPrograms(last_update))
+    currentDate = getCurrentDate()
+    print(getTVPrograms(currentDate))
 
     
