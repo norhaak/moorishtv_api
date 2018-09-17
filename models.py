@@ -22,4 +22,4 @@ class Program(Base):
         data['date'] = self.date
         data['time'] = self.time
         data['title'] = self.title
-        return json.dumps(data, sort_keys=True, indent=4)
+        return data
