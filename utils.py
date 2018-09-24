@@ -8,10 +8,17 @@ from models import Program
 
 PROG_URL = 'http://www.alaoula.ma/programmes_inst.php?jr={}&lang=fr'
 
-
 def insert_program(program):
     db_session.add(program)
     db_session.commit()
+
+
+def insert_programs(programs):
+    db_session.beginTransaction();
+    for program in programs:
+        db_session.add(program);
+    db_session.setTransactionSuccessful();
+    db_session.endTransaction();
 
 
 def save_programs(date, programs):
@@ -34,16 +41,25 @@ def getNext7Dates():
         dates.append(formatDate(nextDate))
     return dates
 
+def getLast7Dates():
+    currentDate = getCurrentDate()
+    dates = []
+    for i in range(1,8):
+        nextDate = currentDate - timedelta(days=i)
+        dates.append(formatDate(nextDate))
+    return dates
+
 
 def updateDB():
     dates = getNext7Dates()
     for date in dates:
+        print('fetching date for {} tv programs...'.format(date))
         content = fetchData(PROG_URL.format(date))
         soup = prepareSoup(content)
         programs = parseTVPrograms(soup)
+        print('saving tv programs into db...')
         save_programs(date, programs)
         
-
 
 def cleanDB(date):
     programs = get_programs_by_date(date)
@@ -51,6 +67,10 @@ def cleanDB(date):
         db_session.delete(program)
     db_session.commit()
 
+
+def convertStr2Date(date_str):
+    date_ = datetime.strptime(date_str, '%d-%m-%y').date()
+    return date_.strftime('%d/%m/%Y')
 
 def formatDate(_date):
     return _date.strftime('%d/%m/%Y')
@@ -141,7 +161,12 @@ def getTVPrograms(date):
         
 
 if __name__ == '__main__':
-    currentDate = getCurrentDate()
-    print(getTVPrograms(currentDate))
+    #updateDB()
+    last_days = getLast7Dates()
+    for date in last_days:
+        cleanDB(date)
+
+    #currentDate = getCurrentDate()
+    #print(getTVPrograms(currentDate))
 
     

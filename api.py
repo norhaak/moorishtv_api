@@ -3,7 +3,7 @@ import os
 from flask import Flask
 from flask_restful import reqparse, abort, Resource, Api
 
-from utils import getTVPrograms, getCurrentDate, formatDate
+from utils import getTVPrograms, getCurrentDate, formatDate, convertStr2Date
 from database import db_session
 
 app = Flask(__name__)
@@ -57,13 +57,21 @@ class ProgramList(Resource):
         TV_PROGRAMS[program_id] = {'title': args['title'], 'time': args['time']}
         return TV_PROGRAMS[program_id], 201
 
+class ProgramListByDate(Resource):
+    def get(self, program_date):
+        program_date = convertStr2Date(program_date)
+        print(program_date)
+        TV_PROGRAMS = getTVPrograms(program_date)
+        return TV_PROGRAMS
+
 
 
 ##
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(ProgramList, '/programs')
-api.add_resource(Program, '/programs/<program_id>')
+api.add_resource(ProgramListByDate, '/programs/<program_date>')
+api.add_resource(Program, '/program/<program_id>')
 
 @app.route("/")
 def index():
@@ -77,7 +85,7 @@ def shutdown_session(exception=None):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port)
+    app.run(host='127.0.0.1', port=port, debug=True)
 
 
 
