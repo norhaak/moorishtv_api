@@ -72,6 +72,10 @@ def convertStr2Date(date_str):
     date_ = datetime.strptime(date_str, '%d-%m-%y').date()
     return date_.strftime('%d/%m/%Y')
 
+def convertDateFormat(date_str):
+    date_ = datetime.strptime(date_str, '%d/%m/%Y')
+    return datetime.strftime(date_, '%Y-%m-%d')
+
 def formatDate(_date):
     return _date.strftime('%d/%m/%Y')
 
@@ -154,6 +158,10 @@ def getTVPrograms(date):
     programsJson = []
     for program in programs:
         programsJson.append(program.as_json())
+
+    for program in programsJson:
+        program['date'] = convertDateFormat(program['date'])
+        program['time'] = program['time'].replace('.', ':')
     
     return {'status': status,
             'message': message,
