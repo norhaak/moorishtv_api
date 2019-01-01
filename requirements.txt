@@ -1,6 +1,6 @@
 beautifulsoup4==4.6.3
 Flask==1.0.2
 Flask-RESTful==0.3.6
-requests==2.19.1
+requests==2.20.0
 gunicorn==19.7.1
 Flask-SQLAlchemy==2.3.2
